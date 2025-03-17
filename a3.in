@@ -1,0 +1,15 @@
+begin
+var a;
+var b;
+var c;
+var d;
+var e;
+var f;
+var ghijk;
+var hello;
+
+a = b+c+d+e+f+ghijk;
+a = b+2;
+b = (c+hello) * (a - 5);
+end.
+

@@ -1,0 +1,12 @@
+~ This is the first program with a comment
+~ it actually has two comments ...
+
+begin
+  var a; var b; var c; var d; var e; var f;
+  var ghijk;
+  var hello;
+  var e_tt;
+  a = b+c+d+e+f+ghijk;
+  b = ((c+hello) * (a - 5))*(e_tt-45678);
+end.
+
