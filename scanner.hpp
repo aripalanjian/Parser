@@ -5,6 +5,7 @@
 #include <string>
 #include <utility>
 #include <unordered_map>
+#include <unordered_set>
 
 class Scanner{
     std::unordered_map<std::string, std::string> symTable;
@@ -20,7 +21,7 @@ class Scanner{
     void readFile();
 
     // After Reading Lexical Analysis
-    int tokIter;
+    size_t tokIter;
     std::string current;
     int token;
     int nextToken;
@@ -33,6 +34,10 @@ class Scanner{
     bool isValidIden(const std::string &);
     
     void tokenize2();
+
+    // Project 2
+    bool varDecl;
+    std::unordered_set<std::string> validVars;
     
 public:
     Scanner(){}

@@ -42,7 +42,7 @@ bool Parser::recursiveDescent(std::string const &current){
         line++;
         return recursiveDescent(scan.next());
     } else {
-        setError(std::string("Unexpected token: ") + current + " \"" + scan.getCurrentLexeme() + "\"");
+        setError(std::string("unexpected token: ") + current + " \"" + scan.getCurrentLexeme() + "\"");
         return false;
     }
 
@@ -56,12 +56,14 @@ void Parser::stmtSeq(){ // statement { ; statement } ;
         if (error) break;
         //Expect newline
         if (scan.lookahead().compare("newline") == 0){
-            line++;
-            scan.next();
-            statement();
-            // if(scan.lookahead().compare("comment") == 0) scan.next();
+            while (scan.lookahead().compare("newline") == 0){
+                line++;
+                scan.next();
+            }
             if (debug) std::cout << "*StmtSeq2*Current: " << scan.getCurrent() << ", next: " << scan.lookahead() << '\n';
-        }else {
+            statement();
+            if (debug) std::cout << "*StmtSeq3*Current: " << scan.getCurrent() << ", next: " << scan.lookahead() << '\n';
+        } else {
             setError(std::string("expected \'\\n\', found ") + scan.lookahead());
         }
         
@@ -99,8 +101,17 @@ void Parser::statement(){ // assign | return | condition | loop
         //Do nothing
     } else if (scan.lookahead().compare("comment") == 0){
         scan.next();
+    } else if(scan.lookahead().compare("type") == 0){
+        while(scan.lookahead().compare("type") == 0 || scan.lookahead().compare("var_dec") == 0 ){
+            scan.next();
+        }
+        if (scan.lookahead().compare("inval_ident") == 0){
+            setError(std::string("invalid identifier ") + scan.getCurrentLexeme());
+        } else if (scan.lookahead().compare("var_redec") == 0){
+            setError(std::string("illegal redefinition ") + scan.getCurrentLexeme());
+        }
     } else {
-        setError(std::string("expected \'identifier\', found ") + scan.lookahead());
+        setError(std::string("expected {\'identifier\',\'end.\',\'~\',\'var\'}, found ") + scan.lookahead());
     }
 }
 
@@ -158,6 +169,6 @@ void Parser::parse(){
         std::cout << "The program " << file << " is legal: \"success\".\n";
         scan.printIdent();
     } else {
-        std::cout << "Line " << line << " contains error " << errorMsg << ".\n";
+        std::cout << "Line " << line << " contains error " << errorMsg << ".\n\n";
     }
 }

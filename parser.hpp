@@ -3,7 +3,8 @@
 
 #include "scanner.hpp"
 #include <stack>
-#include <unordered_set>
+
+//tokens add : undef_var, var_dec, type
 
 class Parser{
     std::vector<std::string> tokens;
@@ -31,6 +32,8 @@ class Parser{
 
     void setError(std::string const &errStr){error = true; errorMsg = errStr;}
     bool recursiveDescent(std::string const &);
+
+    void generate();
 
 public:
     Parser(bool debug, std::string &file);

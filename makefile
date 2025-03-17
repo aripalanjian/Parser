@@ -14,28 +14,28 @@ main: $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 test-a1:
-	./main a1
+	./main a1.in
 
 test-a2:
-	./main a2
+	./main a2.in
 
 test-a3:
-	./main a3
+	./main a3.in
 
 test-a4:
-	./main a4
+	./main a4.in
 
 test-a5:
-	./main a5
+	./main a5.in
 
 test-a6:
-	./main a6
+	./main a6.in
 
 test-a7:
-	./main a7
+	./main a7.in
 
 test-a8:
-	./main a8
+	./main a8.in
 
 run: $(TESTS)
 

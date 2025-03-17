@@ -9,6 +9,7 @@ Scanner::Scanner(std::string file, bool debug){
     this->file = file;
     this->debug = debug;
     tokIter = 0;
+    varDecl = false;
     readFile();
     tokenize2();
 
@@ -39,7 +40,7 @@ void Scanner::readFile(){
 bool Scanner::isValidIden(const std::string &identifier){
     bool isValid = true;
     int consecUnderScores = 0;
-    for (int i = 0; i < identifier.size(); i++) {
+    for (size_t i = 0; i < identifier.size(); i++) {
         if (consecUnderScores > 1) {
             isValid = false;
             errorMsg = "Invalid Identifier";
@@ -55,8 +56,19 @@ bool Scanner::isValidIden(const std::string &identifier){
     }
 
     if (isValid) {
-        symTable.insert({identifier, ""});
-        tokens.emplace_back("ident");
+        if (validVars.find(identifier) != validVars.end()){
+            if (varDecl){
+                tokens.emplace_back("var_redec");
+            } else {
+                tokens.emplace_back("ident");
+            }
+        } else if (varDecl){
+            symTable.insert({identifier, ""});
+            tokens.emplace_back("var_dec");
+        } else {
+            tokens.emplace_back("undef_var");
+        }
+        
     } else {
         invSymTable.insert({identifier, ""});
         tokens.emplace_back("inval_ident");
@@ -68,7 +80,7 @@ bool Scanner::isValidIden(const std::string &identifier){
 
 bool Scanner::isValidNum(const std::string &num){
     int numPer = 0;
-    for (int i = 0; i < num.size(); i++) {
+    for (size_t i = 0; i < num.size(); i++) {
         if ( num.at(i) == '.') {
             numPer++;
         }
@@ -89,9 +101,10 @@ bool Scanner::isValidNum(const std::string &num){
 void Scanner::tokenize2(){
     //Add functionality for lvalue and rvalue std::string prevToken; if (lookup(c) == '=') set flag to store next expr as prevToken val;
     std::string lastIdent = "";
-    for (int i = 0; i < source.size(); i++){
+    for (size_t i = 0; i < source.size(); i++){
         lexeme = "";
         std::string line = source.at(i);
+        // std::cout << "***********" << line.substr(0, 3) << " " << line.substr(3) <<  '\n';
         if (line.compare("begin") == 0){
             tokens.emplace_back("beg_tok");
             lexemes.push_back(line);
@@ -99,8 +112,64 @@ void Scanner::tokenize2(){
             tokens.emplace_back("end_tok");
             lexemes.push_back(line);
             break;
+        } else if(line.substr(0, 3).compare("var") == 0){
+            bool valIden = false;
+            varDecl = true;
+            tokens.emplace_back("type");
+            lexemes.push_back(line.substr(0, 3));
+            for(size_t i = 3; i < line.size(); i++){
+                if (line.substr(i, 3).compare("var") == 0){
+                    tokens.emplace_back("type");
+                    lexemes.push_back(line.substr(i, 3));
+                    i = i + 3;
+                }
+
+                char c = line.at(i);
+                if (isalpha(c)){
+                    lexeme.push_back(c);
+                    if (i < line.size() - 1){
+                        c = line.at(i+1);
+                        while(isalnum(c) || c == '_'){
+                            i++;
+                            lexeme.push_back(c);
+                            if (i < line.size() - 1){
+                                c = line.at(i+1);
+                            } else {
+                                valIden = isValidIden(lexeme);
+                                if (valIden){
+                                    validVars.insert(lexeme);
+                                    lexeme = "";
+                                }
+                                break;
+                            }
+                        }
+                    } else {
+                        valIden = isValidIden(lexeme);
+                        if (valIden){
+                            validVars.insert(lexeme);
+                            lexeme = "";
+                        }
+                        break;
+                    }
+                    valIden = isValidIden(lexeme);
+                    
+                } else {
+                    if (c == ','){
+                        if (valIden){
+                            validVars.insert(lexeme);
+                            lexeme = "";
+                        }
+                    } else if (c == ';'){
+                        if (valIden){
+                            validVars.insert(lexeme);
+                            lexeme = "";
+                        }
+                    }
+                }
+            }
+            varDecl = false;
         } else {
-            for(int i = 0; i < line.size(); i++){
+            for(size_t i = 0; i < line.size(); i++){
 
                 char c = line.at(i);
                 if (isalpha(c)){
@@ -202,7 +271,7 @@ void Scanner::printIdent(){
 
 void Scanner::printTokens(){
     std::cout << "Source:\n";
-    for ( int i = 0; i < tokens.size(); i++){
+    for ( size_t i = 0; i < tokens.size(); i++){
         if (tokens.at(i).compare("newline") != 0){
             std::cout << tokens.at(i) << " : " << lexemes.at(i) << '\n';
         } else {
