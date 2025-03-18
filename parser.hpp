@@ -12,12 +12,10 @@ class Parser{
 
     bool error;
     std::string errorMsg;
-    std::stack<std::string> paren;
-    std::stack<std::string> bracket;
     bool debug;
     unsigned line;
     bool valid;
-    bool rvalue;
+    bool lvalue, rvalue;
     std::string lookahead;
     Scanner scan;
     
@@ -34,6 +32,14 @@ class Parser{
     bool recursiveDescent(std::string const &);
 
     void generate();
+    
+    std::stack<std::string> values;
+    std::stack<std::string> operators;
+    std::stack<std::string> parens;
+    std::string currentLVal;
+    std::vector<std::string> currentRVal;
+    std::vector<std::string> rpnCode;
+    std::unordered_set<std::string> opers{"+","-","*","/","%"};
 
 public:
     Parser(bool debug, std::string &file);

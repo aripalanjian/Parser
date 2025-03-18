@@ -6,6 +6,8 @@
 Parser::Parser(bool debug, std::string &file){
     this->file = file;
     this->debug = debug;
+    lvalue = true;
+    rvalue = false;
     line = 1;
     scan = Scanner(file, debug);
     error = false;
@@ -61,6 +63,9 @@ void Parser::stmtSeq(){ // statement { ; statement } ;
                 scan.next();
             }
             if (debug) std::cout << "*StmtSeq2*Current: " << scan.getCurrent() << ", next: " << scan.lookahead() << '\n';
+            rvalue = false;
+            lvalue = true;
+            if (currentRVal.size() > 0) generate();
             statement();
             if (debug) std::cout << "*StmtSeq3*Current: " << scan.getCurrent() << ", next: " << scan.lookahead() << '\n';
         } else {
@@ -75,10 +80,14 @@ void Parser::statement(){ // assign | return | condition | loop
     //Expect ident
     if (scan.lookahead().compare("ident") == 0){
         //Future move to assign if 'ident'
+        if (lvalue) {
+            currentLVal = scan.getCurrentLexeme();
+            lvalue = false;}
         scan.next();
         //Expect '='
         if (scan.lookahead().compare("assign_op") == 0){
             rvalue = true;
+            lvalue = false;
             scan.next();
             expression();
             if (debug) std::cout << "*Stmt2*Current: " << scan.getCurrent() << ", next: " << scan.lookahead() << '\n';
@@ -89,6 +98,9 @@ void Parser::statement(){ // assign | return | condition | loop
                 scan.next();
                 if (debug) std::cout << "*Stmt3*Current: " << scan.getCurrent() << ", next: " << scan.lookahead() << '\n';
                 if (scan.lookahead().compare("ident") == 0){
+                    rvalue = false;
+                    lvalue = true;
+                    generate();
                     statement();
                 } else if (scan.lookahead().compare("newline") != 0){
                     setError(std::string("expected {\'\\n\',identifier}, found ") + scan.lookahead());
@@ -121,6 +133,7 @@ void Parser::expression(){ // term { ( add_op | sub_op ) term}
     if (debug) std::cout << "*Expr2*Current: " << scan.getCurrent() << ", next: " << scan.lookahead() << '\n';
     std::unordered_set<std::string> exprOpr{"add_op","sub_op"};
     while (exprOpr.find(scan.lookahead()) != exprOpr.end()){
+        if (rvalue) {currentRVal.push_back(scan.getCurrentLexeme());}
         scan.next();
         if (debug) std::cout << "*Expr3*Current: " << scan.getCurrent() << ", next: " << scan.lookahead() << '\n';
         if (error) break;
@@ -136,6 +149,7 @@ void Parser::term(){ // factor { ( mult_op | div_op ) factor}
     while (termOpr.find(scan.lookahead()) != termOpr.end()){
         if (debug) std::cout << "*Term3*Current: " << scan.getCurrent() << ", next: " << scan.lookahead() << '\n';
         if (error) break;
+        if (rvalue) {currentRVal.push_back(scan.getCurrentLexeme());}
         scan.next(); // Current '*' | '/' | '%'
         factor();
     }
@@ -143,6 +157,8 @@ void Parser::term(){ // factor { ( mult_op | div_op ) factor}
 }
 
 void Parser::factor(){ 
+    if (rvalue) {currentRVal.push_back(scan.getCurrentLexeme());}
+
     if (debug) std::cout << "*Fact1*Current: " << scan.getCurrent() << ", next: " << scan.lookahead() << '\n';
     // Expect ident | num_val | lParen 
     if (scan.lookahead().compare("ident") == 0 || scan.lookahead().compare("num_val") == 0){
@@ -155,6 +171,7 @@ void Parser::factor(){
         if (scan.lookahead().compare("rParen") != 0){
             setError(std::string("expected \')\' found ") + scan.lookahead());
         } else {
+            if (rvalue) {currentRVal.push_back(scan.getCurrentLexeme());}
             scan.next();
         }
     } else {
@@ -171,4 +188,23 @@ void Parser::parse(){
     } else {
         std::cout << "Line " << line << " contains error " << errorMsg << ".\n\n";
     }
+}
+
+void Parser::generate(){
+    std::cout << "Line " << line - 1 << ": " << currentLVal << " = ";
+    for (std::string lexeme : currentRVal) {
+        std::cout << lexeme << " ";
+        if (opers.find(lexeme) != opers.end()){
+            operators.push(lexeme);
+        } else if (lexeme.compare("(") == 0 || lexeme.compare(")") == 0){
+            parens.push(lexeme);
+        } else {
+            values.push(lexeme);
+        }
+
+    }
+    std::cout << '\n';
+
+    currentLVal = "";
+    currentRVal.clear();
 }
