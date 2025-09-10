@@ -1,4 +1,4 @@
-# Programing Languages Project 2
+# Parser
 - Description: Semantic checker and code generator
 - Contributor(s): Ari Palanjian
 - [GitHub](https://github.com/aripalanjian/PLs-Proj-2.git) 
