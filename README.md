@@ -21,3 +21,7 @@ Errors are handled on the parser level where the expected token will signal if t
 
 ## In Progress
 - RPN Code Generation Stored in text file
+
+## Future
+- Modernize to -std=c++20
+- Reorganize and develop a more functional symbol table
